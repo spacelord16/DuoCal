@@ -82,6 +82,194 @@ npm run dev
 
 Visit `http://localhost:3000` and start tracking! 🎉
 
+## ☁️ Cloudflare AI Version (Assignment Implementation)
+
+This project includes a **Cloudflare Workers AI** implementation that meets the assignment requirements for building an AI-powered application on Cloudflare.
+
+### ✨ Cloudflare Features
+
+- **🤖 LLM Integration**: Uses Llama 3.3 on Workers AI to parse natural language meal descriptions
+- **⚡ Edge Computing**: Runs on Cloudflare's global network for low latency
+- **💾 State Management**: Durable Objects store meal logs and daily totals per user
+- **🔄 Real-time Processing**: Instant AI-powered calorie calculations
+
+### 🏗️ Architecture
+
+The Cloudflare implementation includes:
+
+1. **Cloudflare Worker** (`worker/src/index.ts`)
+
+   - Coordinates AI processing and state management
+   - Handles API requests from the frontend
+   - Integrates with Workers AI (Llama 3.3)
+
+2. **Durable Objects** (`CalorieLog` class)
+
+   - Stores meal data per user
+   - Maintains daily calorie totals
+   - Persists state across requests
+
+3. **Frontend Integration** (`frontend/components/MealLoggerAI.js`)
+   - Natural language meal input
+   - Real-time AI processing feedback
+   - Beautiful UI for AI-powered logging
+
+### 🚀 Quick Start (Cloudflare Version)
+
+#### Prerequisites
+
+- Node.js 18+
+- Wrangler CLI: `npm install -g wrangler`
+- Cloudflare account with Workers AI enabled
+
+#### Setup
+
+1. **Install Worker Dependencies**:
+
+   ```bash
+   cd worker
+   npm install
+   ```
+
+2. **Login to Cloudflare**:
+
+   ```bash
+   wrangler login
+   ```
+
+3. **Enable Workers AI**:
+
+   - Go to [Cloudflare Dashboard](https://dash.cloudflare.com) → Workers & Pages → AI
+   - Enable Workers AI (free tier available)
+
+4. **Run Worker Locally**:
+
+   ```bash
+   cd worker
+   npm run dev
+   ```
+
+   Worker will be available at `http://localhost:8787`
+
+5. **Update Frontend to Use Worker**:
+
+   ```bash
+   cd frontend
+   # Set environment variable
+   export NEXT_PUBLIC_WORKER_URL=http://localhost:8787
+   npm run dev
+   ```
+
+6. **Use AI Version**:
+   - Visit `http://localhost:3000` and use the AI meal logger
+   - Or use the dedicated AI page (if configured)
+
+#### Deploy to Cloudflare
+
+1. **Deploy Worker**:
+
+   ```bash
+   cd worker
+   npm run deploy
+   ```
+
+   Note the deployed worker URL (e.g., `https://duocal-ai-worker.your-subdomain.workers.dev`)
+
+2. **Deploy Frontend to Cloudflare Pages**:
+
+   ```bash
+   cd frontend
+   # Set production worker URL
+   export NEXT_PUBLIC_WORKER_URL=https://duocal-ai-worker.your-subdomain.workers.dev
+
+   # Build and deploy
+   npm run build
+   npx wrangler pages deploy .next
+   ```
+
+   Or connect your GitHub repo to Cloudflare Pages for automatic deployments.
+
+### 📋 Assignment Requirements Mapping
+
+✅ **LLM (Llama 3.3 on Workers AI)**
+
+- Uses `@cf/meta/llama-3.3-8b-instruct` model
+- Parses natural language meal descriptions
+- Returns structured JSON with calories and macronutrients
+
+✅ **Workflow / Coordination (Cloudflare Worker)**
+
+- Worker coordinates the entire process
+- Receives user input → Calls AI → Stores in Durable Object → Returns results
+
+✅ **User Input via Chat (Cloudflare Pages)**
+
+- Next.js frontend deployed on Cloudflare Pages
+- Natural language text input for meal descriptions
+- Real-time feedback and updates
+
+✅ **Memory / State (Durable Objects)**
+
+- `CalorieLog` Durable Object stores meal data per user
+- Maintains daily totals and meal history
+- Persists state across requests and resets daily
+
+### 🔗 API Endpoints (Cloudflare Worker)
+
+- `POST /api/log-meal` - Log a meal using AI parsing
+- `GET /api/daily-total/:userId` - Get daily calorie total
+- `GET /api/meals/:userId` - Get all meals for today
+
+See [worker/README.md](worker/README.md) for detailed API documentation.
+
+### 📁 Project Structure (Cloudflare)
+
+```
+DuoCal/
+├── worker/                    # Cloudflare Worker
+│   ├── src/
+│   │   └── index.ts         # Worker + Durable Object
+│   ├── wrangler.toml        # Cloudflare configuration
+│   └── package.json
+├── frontend/
+│   ├── components/
+│   │   └── MealLoggerAI.js  # AI-powered meal logger
+│   └── app/
+│       └── page-ai.js       # AI version of main page
+└── README.md
+```
+
+### 🎯 Example Usage
+
+```bash
+# Log a meal using natural language
+curl -X POST https://your-worker.workers.dev/api/log-meal \
+  -H "Content-Type: application/json" \
+  -d '{
+    "userId": "user1",
+    "mealDescription": "I had a bowl of oatmeal with blueberries and a coffee"
+  }'
+
+# Response:
+# {
+#   "success": true,
+#   "meal": {
+#     "meal_name": "Oatmeal with Blueberries and Coffee",
+#     "estimated_calories": 250,
+#     "macronutrients": { ... }
+#   },
+#   "daily_total": 1250
+# }
+```
+
+### 📚 Additional Resources
+
+- [Cloudflare Workers AI Documentation](https://developers.cloudflare.com/workers-ai/)
+- [Durable Objects Guide](https://developers.cloudflare.com/durable-objects/)
+- [Cloudflare Pages Documentation](https://developers.cloudflare.com/pages/)
+
+---
+
 ## 📖 API Documentation
 
 ### User Endpoints
@@ -132,10 +320,11 @@ DuoCal combines the best aspects of popular apps:
 1. Click "Settings"
 2. Adjust target and maintenance calories
 3. Save and see the changes reflected immediately
-<!-- 
+<!--
+
 ## 🗄️ Database Schema
 
-```sql
+````sql
 -- Users table
 CREATE TABLE users (
     id INTEGER PRIMARY KEY,
@@ -169,26 +358,36 @@ CREATE TABLE ingredients (
 
 ### Project Structure
 
-```
+````
+
 DuoCal/
-├── backend/
-│   ├── app/
-│   │   ├── main.py          # FastAPI application
-│   │   ├── database.py      # SQLAlchemy models
-│   │   └── __init__.py
-│   └── requirements.txt
-├── frontend/
-│   ├── app/
-│   │   ├── page.js          # Main dashboard
-│   │   ├── layout.tsx       # App layout
-│   │   └── globals.css      # Global styles
-│   ├── components/
-│   │   ├── DashboardWidget.js  # User dashboard card
-│   │   ├── MealLogger.js       # Meal logging form
-│   │   ├── CalorieRing.js      # Progress visualization
-│   │   └── UserSettings.js     # Settings page
-│   └── package.json
+├── backend/ # FastAPI backend (original)
+│ ├── app/
+│ │ ├── main.py # FastAPI application
+│ │ ├── database.py # SQLAlchemy models
+│ │ └── **init**.py
+│ └── requirements.txt
+├── frontend/ # Next.js frontend
+│ ├── app/
+│ │ ├── page.js # Main dashboard (original)
+│ │ ├── page-ai.js # AI-powered version
+│ │ ├── layout.tsx # App layout
+│ │ └── globals.css # Global styles
+│ ├── components/
+│ │ ├── DashboardWidget.js # User dashboard card
+│ │ ├── MealLogger.js # Meal logging form (original)
+│ │ ├── MealLoggerAI.js # AI-powered meal logger
+│ │ ├── CalorieRing.js # Progress visualization
+│ │ └── UserSettings.js # Settings page
+│ └── package.json
+├── worker/ # Cloudflare Worker (AI version)
+│ ├── src/
+│ │ └── index.ts # Worker + Durable Object
+│ ├── wrangler.toml # Cloudflare configuration
+│ ├── package.json
+│ └── README.md # Worker documentation
 └── README.md
+
 ```
 
 ### Adding New Features
@@ -249,3 +448,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 [Report Bug](https://github.com/your-username/duocal/issues) · [Request Feature](https://github.com/your-username/duocal/issues) · [Documentation](https://github.com/your-username/duocal/wiki)
 
 </div>
+```

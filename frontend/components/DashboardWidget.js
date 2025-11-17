@@ -33,9 +33,15 @@ const DashboardWidget = ({ user }) => {
       <div className="text-center mb-6">
         <div className="bg-gray-800/50 rounded-xl p-4 border border-gray-700/50">
           <p className="text-2xl font-bold text-white mb-1">
-            {remainingCalories >= 0 ? remainingCalories : 0}
+            {remainingCalories >= 0 ? remainingCalories.toLocaleString() : "0"}
           </p>
           <p className="text-sm text-gray-400">calories remaining</p>
+          <div className="mt-2 pt-2 border-t border-gray-700/50">
+            <p className="text-xs text-gray-500">
+              {consumedCalories.toLocaleString()} /{" "}
+              {targetCalories.toLocaleString()} kcal
+            </p>
+          </div>
         </div>
       </div>
 
@@ -67,26 +73,78 @@ const DashboardWidget = ({ user }) => {
         </h3>
 
         {(user.meals || []).length === 0 ? (
-          <div className="text-center py-4">
-            <p className="text-gray-500 text-sm">No meals logged yet</p>
+          <div className="text-center py-6">
+            <div className="text-gray-500 text-sm mb-2">
+              No meals logged yet
+            </div>
+            <div className="text-gray-600 text-xs">
+              Start by logging your first meal!
+            </div>
           </div>
         ) : (
-          <div className="space-y-2">
-            {(user.meals || []).map((meal, index) => (
-              <div
-                key={index}
-                className="flex justify-between items-center bg-gray-800/30 border border-gray-700/30 rounded-lg p-3 hover:bg-gray-700/30 transition-colors duration-200"
-              >
-                <div>
-                  <span className="text-white font-medium text-sm">
-                    {meal.name}
-                  </span>
-                </div>
-                <div className="bg-indigo-500/20 text-indigo-300 px-3 py-1 rounded-full text-xs font-medium">
-                  {meal.calories || 0} kcal
-                </div>
-              </div>
-            ))}
+          <div className="space-y-2 max-h-64 overflow-y-auto">
+            {(user.meals || [])
+              .slice()
+              .reverse()
+              .map((meal, index) => {
+                // Format timestamp
+                const formatTime = (timestamp) => {
+                  if (!timestamp) return "";
+                  try {
+                    const date = new Date(timestamp);
+                    const now = new Date();
+                    const diffMs = now - date;
+                    const diffMins = Math.floor(diffMs / 60000);
+                    const diffHours = Math.floor(diffMs / 3600000);
+
+                    if (diffMins < 1) return "Just now";
+                    if (diffMins < 60) return `${diffMins}m ago`;
+                    if (diffHours < 24) return `${diffHours}h ago`;
+                    return date.toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    });
+                  } catch {
+                    return "";
+                  }
+                };
+
+                return (
+                  <div
+                    key={meal.id || index}
+                    className="flex justify-between items-start bg-gray-800/30 border border-gray-700/30 rounded-lg p-3 hover:bg-gray-700/30 transition-all duration-200 group"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-white font-medium text-sm truncate">
+                          {meal.name}
+                        </span>
+                      </div>
+                      {meal.logged_at && (
+                        <div className="text-xs text-gray-500">
+                          {formatTime(meal.logged_at)}
+                        </div>
+                      )}
+                      {meal.macronutrients && (
+                        <div className="flex gap-2 mt-1 text-xs text-gray-600">
+                          {meal.macronutrients.protein && (
+                            <span>P: {meal.macronutrients.protein}g</span>
+                          )}
+                          {meal.macronutrients.carbs && (
+                            <span>C: {meal.macronutrients.carbs}g</span>
+                          )}
+                          {meal.macronutrients.fat && (
+                            <span>F: {meal.macronutrients.fat}g</span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                    <div className="bg-indigo-500/20 text-indigo-300 px-3 py-1 rounded-full text-xs font-semibold ml-2 flex-shrink-0">
+                      {meal.calories || 0} kcal
+                    </div>
+                  </div>
+                );
+              })}
           </div>
         )}
       </div>
